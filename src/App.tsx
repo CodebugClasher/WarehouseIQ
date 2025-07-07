@@ -148,7 +148,7 @@ const App: React.FC = () => {
         {/* Page Content */}
         <main className="flex-1 p-6">
           <ActiveComponent />
-        </main>
+        </main>git commit -m "Updated UI: Fixed App.tsx layout"
       </div>
     </div>
   );
