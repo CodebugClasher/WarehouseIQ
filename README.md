@@ -3,7 +3,7 @@
 ## Backend ML Architecture (Planned Integration)
 
 A new backend will be added under `ml-app/backend/` to serve ML models (XGBoost, Prophet, etc.) via FastAPI. This will not interfere with the existing frontend structure. The backend will include:
-
+```
 ml-app/
 ├── backend/
 │   ├── app/
@@ -36,7 +36,7 @@ ml-app/
 │   ├── xgb_trend_predictor.pkl
 ├── requirements.txt
 └── run.py
-
+```
 ## Project Structure
 
 ```
