@@ -22,7 +22,7 @@ const TrendAnalyzer = () => {
     if (!volume || !sentiment || !trend) return;
 
     // Simplified trend calculation
-    const spikePercentage = Math.round((volume * sentiment * trend) / 1000);
+    const spikePercentage = Math.round((volume * sentiment * trend) / 20000);
     const confidence = Math.min(95, 60 + (sentiment * 10) + (trend * 5));
     
     let recommendation = 'Monitor closely';
