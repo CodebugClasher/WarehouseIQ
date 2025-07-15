@@ -1,10 +1,39 @@
 import React, { useState } from 'react';
-import { Truck, Package, CheckCircle, AlertTriangle, Clock, FileText } from 'lucide-react';
+import {
+  Truck,
+  Package,
+  CheckCircle,
+  AlertTriangle,
+  Clock,
+  FileText,
+  PlusCircle,
+  XCircle
+} from 'lucide-react';
+
+interface Reorder {
+  id: string;
+  product: string;
+  currentStock: number;
+  requiredStock: number;
+  supplier: string;
+  urgency: string;
+  estimatedDelivery: string;
+}
 
 const ControlPanel = () => {
-  const [activeTab, setActiveTab] = useState('reorders');
+  const [activeTab, setActiveTab] = useState<'reorders' | 'shipments'>('reorders');
+  const [showReorderForm, setShowReorderForm] = useState(false);
+  const [newReorder, setNewReorder] = useState<Reorder>({
+    id: '',
+    product: '',
+    currentStock: 0,
+    requiredStock: 0,
+    supplier: '',
+    urgency: '',
+    estimatedDelivery: ''
+  });
 
-  const pendingReorders = [
+  const [pendingReorders, setPendingReorders] = useState<Reorder[]>([
     {
       id: 'RO-001',
       product: 'Wireless Headphones Pro',
@@ -32,37 +61,29 @@ const ControlPanel = () => {
       urgency: 'Critical',
       estimatedDelivery: '2025-01-03'
     }
-  ];
+  ]);
 
-  const shipments = [
-    {
-      id: 'SH-001',
-      type: 'Inbound',
-      product: 'Yoga Mat Premium',
-      quantity: 500,
-      source: 'ZenFit Factory',
-      status: 'In Transit',
-      eta: '2025-01-04'
-    },
-    {
-      id: 'SH-002',
-      type: 'Outbound',
-      product: 'Wireless Headphones',
-      quantity: 150,
-      destination: 'Retail Store A',
-      status: 'Processing',
-      eta: '2025-01-03'
-    },
-    {
-      id: 'SH-003',
-      type: 'Inbound',
-      product: 'Smart Home Hub',
-      quantity: 200,
-      source: 'SmartTech Inc',
-      status: 'Delayed',
-      eta: '2025-01-06'
-    }
-  ];
+  const handleReorderChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setNewReorder(prev => ({
+      ...prev,
+      [name]: name === 'currentStock' || name === 'requiredStock' ? Number(value) : value
+    }));
+  };
+
+  const handleReorderSubmit = () => {
+    setPendingReorders([...pendingReorders, newReorder]);
+    setNewReorder({
+      id: '',
+      product: '',
+      currentStock: 0,
+      requiredStock: 0,
+      supplier: '',
+      urgency: '',
+      estimatedDelivery: ''
+    });
+    setShowReorderForm(false);
+  };
 
   const getUrgencyColor = (urgency: string) => {
     switch (urgency) {
@@ -73,262 +94,198 @@ const ControlPanel = () => {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'In Transit': return 'bg-blue-100 text-blue-800';
-      case 'Processing': return 'bg-purple-100 text-purple-800';
-      case 'Delayed': return 'bg-red-100 text-red-800';
-      case 'Delivered': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6 bg-white">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-gray-800">Warehouse Manager Control Panel</h1>
-        <p className="text-gray-600">Manage reorders, restocking, and shipments</p>
+        <p className="text-gray-600">Manage reorders, inventory and shipments</p>
       </div>
 
-      {/* Control Tabs */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-        <div className="flex border-b border-gray-200">
-          <button
-            onClick={() => setActiveTab('reorders')}
-            className={`flex items-center space-x-2 px-6 py-4 font-medium transition-colors ${
-              activeTab === 'reorders' 
-                ? 'border-b-2 border-blue-600 text-blue-600 bg-blue-50' 
-                : 'text-gray-600 hover:text-gray-800'
-            }`}
-          >
-            <Package className="w-5 h-5" />
-            <span>Pending Reorders</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('shipments')}
-            className={`flex items-center space-x-2 px-6 py-4 font-medium transition-colors ${
-              activeTab === 'shipments' 
-                ? 'border-b-2 border-blue-600 text-blue-600 bg-blue-50' 
-                : 'text-gray-600 hover:text-gray-800'
-            }`}
-          >
-            <Truck className="w-5 h-5" />
-            <span>Shipments</span>
-          </button>
-        </div>
-
-        {/* Tab Content */}
-        <div className="p-6">
-          {activeTab === 'reorders' && (
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold text-gray-800">Pending Reorder Requests</h3>
-                <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                  Generate Report
-                </button>
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50 rounded-lg">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-800">Reorder ID</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-800">Product</th>
-                      <th className="px-6 py-3 text-center text-sm font-semibold text-gray-800">Current Stock</th>
-                      <th className="px-6 py-3 text-center text-sm font-semibold text-gray-800">Required</th>
-                      <th className="px-6 py-3 text-center text-sm font-semibold text-gray-800">Supplier</th>
-                      <th className="px-6 py-3 text-center text-sm font-semibold text-gray-800">Urgency</th>
-                      <th className="px-6 py-3 text-center text-sm font-semibold text-gray-800">ETA</th>
-                      <th className="px-6 py-3 text-center text-sm font-semibold text-gray-800">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {pendingReorders.map((order) => (
-                      <tr key={order.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4">
-                          <span className="font-medium text-blue-600">{order.id}</span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="font-medium text-gray-800">{order.product}</span>
-                        </td>
-                        <td className="px-6 py-4 text-center">
-                          <span className="font-semibold text-red-600">{order.currentStock}</span>
-                        </td>
-                        <td className="px-6 py-4 text-center">
-                          <span className="font-semibold text-gray-800">{order.requiredStock}</span>
-                        </td>
-                        <td className="px-6 py-4 text-center">
-                          <span className="text-gray-600">{order.supplier}</span>
-                        </td>
-                        <td className="px-6 py-4 text-center">
-                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getUrgencyColor(order.urgency)}`}>
-                            {order.urgency}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-center">
-                          <span className="text-gray-600">
-                            {new Date(order.estimatedDelivery).toLocaleDateString()}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex justify-center space-x-2">
-                            <button className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors">
-                              <CheckCircle className="w-4 h-4" />
-                            </button>
-                            <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
-                              <FileText className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'shipments' && (
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold text-gray-800">Active Shipments</h3>
-                <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
-                  Track Shipment
-                </button>
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50 rounded-lg">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-800">Shipment ID</th>
-                      <th className="px-6 py-3 text-center text-sm font-semibold text-gray-800">Type</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-800">Product</th>
-                      <th className="px-6 py-3 text-center text-sm font-semibold text-gray-800">Quantity</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-800">Source/Destination</th>
-                      <th className="px-6 py-3 text-center text-sm font-semibold text-gray-800">Status</th>
-                      <th className="px-6 py-3 text-center text-sm font-semibold text-gray-800">ETA</th>
-                      <th className="px-6 py-3 text-center text-sm font-semibold text-gray-800">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {shipments.map((shipment) => (
-                      <tr key={shipment.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4">
-                          <span className="font-medium text-blue-600">{shipment.id}</span>
-                        </td>
-                        <td className="px-6 py-4 text-center">
-                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                            shipment.type === 'Inbound' ? 'bg-green-100 text-green-800' : 'bg-purple-100 text-purple-800'
-                          }`}>
-                            {shipment.type}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="font-medium text-gray-800">{shipment.product}</span>
-                        </td>
-                        <td className="px-6 py-4 text-center">
-                          <span className="font-semibold text-gray-800">{shipment.quantity}</span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="text-gray-600">
-                            {shipment.source || shipment.destination}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-center">
-                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(shipment.status)}`}>
-                            {shipment.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-center">
-                          <span className="text-gray-600">
-                            {new Date(shipment.eta).toLocaleDateString()}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex justify-center space-x-2">
-                            <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
-                              <Truck className="w-4 h-4" />
-                            </button>
-                            <button className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors">
-                              <Clock className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <button className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow text-left">
-          <div className="flex items-center space-x-3 mb-3">
-            <div className="p-3 bg-blue-50 rounded-lg">
-              <Package className="w-6 h-6 text-blue-600" />
-            </div>
-            <h3 className="font-semibold text-gray-800">Bulk Reorder</h3>
-          </div>
-          <p className="text-gray-600 text-sm">Process multiple reorders</p>
-        </button>
-
-        <button className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow text-left">
-          <div className="flex items-center space-x-3 mb-3">
-            <div className="p-3 bg-green-50 rounded-lg">
-              <CheckCircle className="w-6 h-6 text-green-600" />
-            </div>
-            <h3 className="font-semibold text-gray-800">Approve Orders</h3>
-          </div>
-          <p className="text-gray-600 text-sm">Review and approve pending orders</p>
-        </button>
-
-        <button className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow text-left">
-          <div className="flex items-center space-x-3 mb-3">
-            <div className="p-3 bg-purple-50 rounded-lg">
-              <Truck className="w-6 h-6 text-purple-600" />
-            </div>
-            <h3 className="font-semibold text-gray-800">Schedule Delivery</h3>
-          </div>
-          <p className="text-gray-600 text-sm">Plan outbound shipments</p>
-        </button>
-
-        <button className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow text-left">
-          <div className="flex items-center space-x-3 mb-3">
-            <div className="p-3 bg-orange-50 rounded-lg">
-              <AlertTriangle className="w-6 h-6 text-orange-600" />
-            </div>
-            <h3 className="font-semibold text-gray-800">Critical Alerts</h3>
-          </div>
-          <p className="text-gray-600 text-sm">Handle urgent notifications</p>
-        </button>
-      </div>
-
-      {/* Summary Stats */}
+      {/* Inventory Status Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-6 text-white">
-          <h3 className="text-lg font-semibold mb-2">Pending Reorders</h3>
-          <p className="text-3xl font-bold mb-2">3</p>
-          <p className="text-blue-100">Requiring attention</p>
+        <div className="bg-gradient-to-r from-red-500 to-red-600 rounded-xl p-6 text-white">
+          <h3 className="text-lg font-semibold mb-2">Critical Items</h3>
+          <p className="text-3xl font-bold mb-2">34</p>
+          <p className="text-red-100">Need Immediate Reorder</p>
         </div>
-        
+        <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-xl p-6 text-white">
+          <h3 className="text-lg font-semibold mb-2">Low Stock</h3>
+          <p className="text-3xl font-bold mb-2">120</p>
+          <p className="text-yellow-100">Monitor Closely</p>
+        </div>
         <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-6 text-white">
-          <h3 className="text-lg font-semibold mb-2">Active Shipments</h3>
-          <p className="text-3xl font-bold mb-2">7</p>
-          <p className="text-green-100">In transit or processing</p>
-        </div>
-        
-        <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-6 text-white">
-          <h3 className="text-lg font-semibold mb-2">Deliveries Today</h3>
-          <p className="text-3xl font-bold mb-2">2</p>
-          <p className="text-purple-100">Expected arrivals</p>
+          <h3 className="text-lg font-semibold mb-2">Sufficient Stock</h3>
+          <p className="text-3xl font-bold mb-2">850</p>
+          <p className="text-green-100">Healthy Inventory</p>
         </div>
       </div>
+
+      {/* Inventory Matrix */}
+      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+        <h3 className="text-lg font-semibold text-gray-800 mb-4">Inventory Matrix</h3>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm text-left text-gray-700">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 font-medium">SKU</th>
+                <th className="px-6 py-3 font-medium">Product</th>
+                <th className="px-6 py-3 font-medium">Brand</th>
+                <th className="px-6 py-3 font-medium text-center">Current</th>
+                <th className="px-6 py-3 font-medium text-center">Forecast</th>
+                <th className="px-6 py-3 font-medium text-center">Required</th>
+                <th className="px-6 py-3 font-medium text-center">Status</th>
+                <th className="px-6 py-3 font-medium text-center">Price Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              <tr>
+                <td className="px-6 py-3">SKU-101</td>
+                <td className="px-6 py-3">Bluetooth Speaker</td>
+                <td className="px-6 py-3">SoundWave</td>
+                <td className="px-6 py-3 text-center">23</td>
+                <td className="px-6 py-3 text-center">145</td>
+                <td className="px-6 py-3 text-center">150</td>
+                <td className="px-6 py-3 text-center">
+                  <span className="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs">Critical</span>
+                </td>
+                <td className="px-6 py-3 text-center text-orange-600 font-medium">Lower Price</td>
+              </tr>
+              <tr>
+                <td className="px-6 py-3">SKU-102</td>
+                <td className="px-6 py-3">Smart Fitness Tracker</td>
+                <td className="px-6 py-3">FitTech</td>
+                <td className="px-6 py-3 text-center">89</td>
+                <td className="px-6 py-3 text-center">120</td>
+                <td className="px-6 py-3 text-center">180</td>
+                <td className="px-6 py-3 text-center">
+                  <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs">Low</span>
+                </td>
+                <td className="px-6 py-3 text-center text-green-600 font-medium">Hold Price</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Reorders Tab */}
+      <div className="flex space-x-4 mt-4">
+        <button
+          onClick={() => setActiveTab('reorders')}
+          className={`px-4 py-2 rounded ${activeTab === 'reorders' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+        >
+          Reorders
+        </button>
+        <button
+          onClick={() => setActiveTab('shipments')}
+          className={`px-4 py-2 rounded ${activeTab === 'shipments' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+        >
+          Shipments
+        </button>
+      </div>
+
+      {activeTab === 'reorders' && (
+        <>
+          {/* Show Reorders */}
+          <div className="grid gap-4">
+            {pendingReorders.map((order, idx) => (
+              <div key={idx} className="p-4 border rounded-md">
+                <p><strong>ID:</strong> {order.id}</p>
+                <p><strong>Product:</strong> {order.product}</p>
+                <p><strong>Stock:</strong> {order.requiredStock}</p>
+                <p><strong>Supplier:</strong> {order.supplier}</p>
+                <p><strong>Urgency:</strong> {order.urgency}</p>
+                <p><strong>ETA:</strong> {order.estimatedDelivery}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Toggle Form */}
+          <div className="text-right">
+            <button
+              onClick={() => setShowReorderForm(prev => !prev)}
+              className="mt-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+            >
+              {showReorderForm ? 'Close Form' : 'New Reorder'}
+            </button>
+          </div>
+
+          {/* Form */}
+          {showReorderForm && (
+            <div className="bg-gray-50 p-6 rounded-xl border mt-4 space-y-4">
+              <div className="grid md:grid-cols-3 gap-4">
+                <input
+                  name="id"
+                  placeholder="Reorder ID"
+                  value={newReorder.id}
+                  onChange={handleReorderChange}
+                  className="p-2 border rounded"
+                />
+                <input
+                  name="product"
+                  placeholder="Product Name"
+                  value={newReorder.product}
+                  onChange={handleReorderChange}
+                  className="p-2 border rounded"
+                />
+                <input
+                  name="supplier"
+                  placeholder="Supplier"
+                  value={newReorder.supplier}
+                  onChange={handleReorderChange}
+                  className="p-2 border rounded"
+                />
+                <input
+                  name="currentStock"
+                  placeholder="Current Stock"
+                  type="number"
+                  value={newReorder.currentStock}
+                  onChange={handleReorderChange}
+                  className="p-2 border rounded"
+                />
+                <input
+                  name="requiredStock"
+                  placeholder="Required Stock"
+                  type="number"
+                  value={newReorder.requiredStock}
+                  onChange={handleReorderChange}
+                  className="p-2 border rounded"
+                />
+                <select
+                  name="urgency"
+                  value={newReorder.urgency}
+                  onChange={handleReorderChange}
+                  className="p-2 border rounded"
+                >
+                  <option value="">Urgency</option>
+                  <option value="Critical">Critical</option>
+                  <option value="High">High</option>
+                  <option value="Medium">Medium</option>
+                  <option value="Low">Low</option>
+                </select>
+                <input
+                  name="estimatedDelivery"
+                  placeholder="ETA"
+                  type="date"
+                  value={newReorder.estimatedDelivery}
+                  onChange={handleReorderChange}
+                  className="p-2 border rounded"
+                />
+              </div>
+              <button
+                onClick={handleReorderSubmit}
+                className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                Submit Reorder
+              </button>
+            </div>
+          )}
+        </>
+      )}
+
+      {activeTab === 'shipments' && (
+        <div className="text-gray-500">shipments are on the way</div>
+      )}
     </div>
   );
 };
