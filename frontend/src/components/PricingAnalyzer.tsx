@@ -21,7 +21,7 @@ const PricingAnalyzer = () => {
 
     if (!walmart || !amazon || !elasticity) return;
 
-    const priceGap = ((amazon - walmart) / walmart) * 100;
+    const priceGap = ((walmart- amazon) / walmart) * 100;
     const shouldLowerPrice = priceGap > 10; // If competitor is 10% higher
     const demandUplift = shouldLowerPrice ? Math.abs(priceGap) * elasticity : 0;
 
